@@ -1,9 +1,11 @@
 "use client";
 import { motion, useReducedMotion } from "framer-motion";
 import { Phone, Star } from "lucide-react";
+import { useBookingModal } from "./BookingModal";
 
 export default function CTATestimonial() {
   const shouldReduce = useReducedMotion();
+  const { openModal } = useBookingModal();
 
   return (
     <section id="contact" className="py-20 bg-[#0F172A]">
@@ -30,14 +32,14 @@ export default function CTATestimonial() {
               </span>
             </a>
 
-            <motion.a
-              href="#book"
+            <motion.button
+              onClick={openModal}
               className="inline-flex items-center gap-2 bg-[#1D4ED8] text-white px-8 py-4 rounded-lg font-bold text-lg mb-8"
               whileHover={shouldReduce ? {} : { scale: 1.03 }}
               whileTap={shouldReduce ? {} : { scale: 0.97 }}
             >
               Book Online Now
-            </motion.a>
+            </motion.button>
 
             <p className="text-slate-400 text-sm font-medium">
               Mon – Sat: 7:00 AM – 7:00 PM

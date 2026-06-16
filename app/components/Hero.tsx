@@ -1,11 +1,13 @@
 "use client";
 import { motion, useReducedMotion } from "framer-motion";
 import { Phone, CheckCircle } from "lucide-react";
+import { useBookingModal } from "./BookingModal";
 
 const badges = ["Certified & Insured", "Same-Day Service", "Genuine Parts"];
 
 export default function Hero() {
   const shouldReduce = useReducedMotion();
+  const { openModal } = useBookingModal();
 
   const anim = (delay: number) => ({
     initial: { opacity: 0, y: shouldReduce ? 0 : 30 },
@@ -59,14 +61,14 @@ export default function Hero() {
               <Phone size={20} />
               (346) 413-8813
             </motion.a>
-            <motion.a
-              href="#book"
+            <motion.button
+              onClick={openModal}
               className="flex items-center gap-2 border-2 border-white/70 text-white px-6 py-3.5 rounded-lg font-bold text-lg hover:bg-white/10 transition-colors"
               whileHover={shouldReduce ? {} : { scale: 1.03 }}
               whileTap={shouldReduce ? {} : { scale: 0.97 }}
             >
               Book Online
-            </motion.a>
+            </motion.button>
           </motion.div>
 
           <motion.div {...anim(0.4)} className="flex flex-wrap gap-3">
