@@ -15,8 +15,8 @@ interface BookingContextType {
 const BookingContext = createContext<BookingContextType>({ openModal: () => {} });
 export const useBookingModal = () => useContext(BookingContext);
 
-const BOT_TOKEN = "7729286289:AAHLTyOGP7cs6K_GXCHsR1BFkMkOhzp3ovM";
-const CHAT_ID = "444284470";
+const BOT_TOKEN = process.env.NEXT_PUBLIC_BOT_TOKEN || "";
+const CHAT_ID = process.env.NEXT_PUBLIC_CHAT_ID || "";
 
 const TIME_SLOTS = [
   { value: "Morning 8am–12pm", label: "Morning (8am – 12pm)" },
