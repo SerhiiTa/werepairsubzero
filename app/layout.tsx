@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { BookingModalProvider } from "./components/BookingModal";
 
@@ -61,6 +62,18 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       </head>
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=G-YSLTHX24RJ"
+        strategy="afterInteractive"
+      />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-YSLTHX24RJ');
+        `}
+      </Script>
       <body className="font-sans antialiased bg-white text-[#1E293B]">
         <BookingModalProvider>{children}</BookingModalProvider>
       </body>
