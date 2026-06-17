@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 export const metadata: Metadata = {
   title: "We Repair Only Sub-Zero | Houston Sub-Zero Repair Specialists",
   description:
-    "Factory-trained Sub-Zero repair technicians in Houston. Same-day service, genuine parts, satisfaction guaranteed. Call (346) 413-8813.",
+    "Sub-Zero stopped cooling? Don't risk it with a general tech. We specialize exclusively in Sub-Zero — right diagnosis, right parts, right fix. Houston area. Call (346) 413-8813.",
   verification: {
     google: "rurQDPK0kn9jRAUggXMijR8O8xmNrruPeIUrBICA3Qw",
   },
