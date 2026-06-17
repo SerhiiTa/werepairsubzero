@@ -45,7 +45,7 @@ export default function Footer() {
             </p>
             <p className="text-slate-400 text-sm leading-relaxed mb-5">
               Houston&apos;s trusted Sub-Zero appliance repair specialists.
-              Factory-trained technicians, genuine parts, same-day service.
+              Independent Sub-Zero specialists. EPA 608 certified. Fair market pricing.
             </p>
             <div className="flex gap-4">
               <a
@@ -104,9 +104,9 @@ export default function Footer() {
                   info@werepairsubzero.com
                 </a>
               </li>
-              <li className="flex items-center gap-2 text-slate-400 text-sm">
-                <MapPin size={15} className="text-[#1D4ED8] flex-shrink-0" />
-                Houston, TX
+              <li className="flex items-start gap-2 text-slate-400 text-sm">
+                <MapPin size={15} className="text-[#1D4ED8] flex-shrink-0 mt-0.5" />
+                11020 Katy Fwy Suite #117,<br />Houston, TX 77043
               </li>
             </ul>
           </div>

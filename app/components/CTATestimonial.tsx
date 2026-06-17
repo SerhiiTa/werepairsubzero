@@ -42,7 +42,7 @@ export default function CTATestimonial() {
             </motion.button>
 
             <p className="text-slate-400 text-sm font-medium">
-              Mon – Sat: 7:00 AM – 7:00 PM
+              Mon – Sat: 8:00 AM – 6:00 PM
             </p>
           </motion.div>
 

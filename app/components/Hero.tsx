@@ -47,8 +47,8 @@ export default function Hero() {
             {...anim(0.2)}
             className="text-lg sm:text-xl text-slate-300 mb-10 max-w-2xl leading-relaxed"
           >
-            Factory-trained technicians. Genuine parts. Same-day service in
-            Houston and surrounding areas.
+            Independent specialists. EPA 608 certified. Fair market pricing.
+            Houston &amp; surrounding areas.
           </motion.p>
 
           <motion.div {...anim(0.3)} className="flex flex-wrap gap-4 mb-12">
