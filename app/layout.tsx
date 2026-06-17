@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   verification: {
     google: "rurQDPK0kn9jRAUggXMijR8O8xmNrruPeIUrBICA3Qw",
   },
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 const schema = {
