@@ -14,8 +14,9 @@ const data: CityData = {
   h1: "Sub-Zero Repair in Katy, TX",
   intro:
     "Katy's master-planned communities like Cinco Ranch, Grand Lakes, and Seven Meadows are home to some of Houston's finest kitchens — many featuring Sub-Zero refrigeration. Our technicians service all Katy ZIP codes including 77494, 77450, and 77449 with prompt, professional repairs.",
-  photo: "/IMG_5215.jpeg",
+  photo: "/IMG_5910.jpeg",
   photoAlt: "Sub-Zero refrigerator repair Katy TX",
+  photoPosition: "top",
   localBusinessSchema: {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",

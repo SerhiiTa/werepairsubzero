@@ -21,6 +21,7 @@ export interface CityData {
   intro: string;
   photo: string;
   photoAlt: string;
+  photoPosition?: string;
   localBusinessSchema: object;
   breadcrumbSchema: object;
   faqs: CityFAQ[];
@@ -123,7 +124,7 @@ export default function CityPageClient({ data }: { data: CityData }) {
       <main>
         {/* Hero */}
         <section className="relative min-h-[55vh] flex items-center overflow-hidden">
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${data.photo}')` }} />
+          <div className="absolute inset-0 bg-cover" style={{ backgroundImage: `url('${data.photo}')`, backgroundPosition: data.photoPosition ?? "center" }} />
           <div className="absolute inset-0 bg-black/55" />
           <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 py-20">
             <motion.p {...fadeUp(0)} className="text-[#60a5fa] font-bold tracking-widest text-xs uppercase mb-4">
