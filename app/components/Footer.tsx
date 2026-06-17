@@ -17,12 +17,20 @@ const InstagramIcon = () => (
 );
 
 const quickLinks = [
-  { href: "#home", label: "Home" },
-  { href: "#services", label: "Services" },
-  { href: "#why-us", label: "Why Us" },
-  { href: "#service-areas", label: "Service Areas" },
-  { href: "#about", label: "About" },
-  { href: "#contact", label: "Contact" },
+  { href: "/", label: "Home" },
+  { href: "/#services", label: "Services" },
+  { href: "/#why-us", label: "Why Us" },
+  { href: "/about/", label: "About" },
+  { href: "/#contact", label: "Contact" },
+];
+
+const serviceAreas = [
+  { href: "/houston/", label: "Houston" },
+  { href: "/katy/", label: "Katy" },
+  { href: "/sugar-land/", label: "Sugar Land" },
+  { href: "/the-woodlands/", label: "The Woodlands" },
+  { href: "/bellaire/", label: "Bellaire" },
+  { href: "/memorial/", label: "Memorial" },
 ];
 
 export default function Footer() {
@@ -36,7 +44,7 @@ export default function Footer() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.5, ease: "easeOut" as const }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-10 mb-12"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12"
         >
           {/* Brand */}
           <div>
@@ -48,18 +56,10 @@ export default function Footer() {
               Independent Sub-Zero specialists. EPA 608 certified. Fair market pricing.
             </p>
             <div className="flex gap-4">
-              <a
-                href="#"
-                aria-label="Facebook"
-                className="text-slate-400 hover:text-white transition-colors"
-              >
+              <a href="#" aria-label="Facebook" className="text-slate-400 hover:text-white transition-colors">
                 <FacebookIcon />
               </a>
-              <a
-                href="#"
-                aria-label="Instagram"
-                className="text-slate-400 hover:text-white transition-colors"
-              >
+              <a href="#" aria-label="Instagram" className="text-slate-400 hover:text-white transition-colors">
                 <InstagramIcon />
               </a>
             </div>
@@ -71,10 +71,21 @@ export default function Footer() {
             <ul className="space-y-2">
               {quickLinks.map((l) => (
                 <li key={l.href}>
-                  <a
-                    href={l.href}
-                    className="text-slate-400 hover:text-white text-sm transition-colors"
-                  >
+                  <a href={l.href} className="text-slate-400 hover:text-white text-sm transition-colors">
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Service Areas */}
+          <div>
+            <p className="font-bold text-white mb-4">Service Areas</p>
+            <ul className="space-y-2">
+              {serviceAreas.map((l) => (
+                <li key={l.href}>
+                  <a href={l.href} className="text-slate-400 hover:text-white text-sm transition-colors">
                     {l.label}
                   </a>
                 </li>
@@ -87,19 +98,13 @@ export default function Footer() {
             <p className="font-bold text-white mb-4">Contact Us</p>
             <ul className="space-y-3">
               <li>
-                <a
-                  href="tel:3464138813"
-                  className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors"
-                >
+                <a href="tel:3464138813" className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
                   <Phone size={15} className="text-[#1D4ED8] flex-shrink-0" />
                   (346) 413-8813
                 </a>
               </li>
               <li>
-                <a
-                  href="mailto:info@werepairsubzero.com"
-                  className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors"
-                >
+                <a href="mailto:info@werepairsubzero.com" className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
                   <Mail size={15} className="text-[#1D4ED8] flex-shrink-0" />
                   info@werepairsubzero.com
                 </a>

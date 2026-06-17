@@ -46,3 +46,11 @@ Washers, dryers, standard ovens (non-Wolf), standard dishwashers (non-Cove), bud
 
 ## Service Area ZIP Codes (Houston Metro)
 77001-77099 (Houston), 77449-77450 (Katy), 77478-77479 (Sugar Land), 77380-77389 (The Woodlands), 77373-77379 (Spring), 77429-77433 (Cypress), 77581-77584 (Pearland), 77401 (Bellaire), 77019 (River Oaks), 77024 (Memorial)
+
+## Service Area Pages
+- https://werepairsubzero.com/houston/ — Sub-Zero repair Houston TX
+- https://werepairsubzero.com/katy/ — Sub-Zero repair Katy TX
+- https://werepairsubzero.com/sugar-land/ — Sub-Zero repair Sugar Land TX
+- https://werepairsubzero.com/the-woodlands/ — Sub-Zero repair The Woodlands TX
+- https://werepairsubzero.com/bellaire/ — Sub-Zero repair Bellaire TX
+- https://werepairsubzero.com/memorial/ — Sub-Zero repair Memorial Houston TX

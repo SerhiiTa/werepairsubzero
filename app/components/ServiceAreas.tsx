@@ -3,13 +3,13 @@ import { motion, useReducedMotion } from "framer-motion";
 import { MapPin } from "lucide-react";
 
 const areas = [
-  "Houston",
-  "Katy",
-  "Sugar Land",
-  "The Woodlands",
-  "Bellaire",
-  "Memorial",
-  "River Oaks",
+  { label: "Houston", href: "/houston/" },
+  { label: "Katy", href: "/katy/" },
+  { label: "Sugar Land", href: "/sugar-land/" },
+  { label: "The Woodlands", href: "/the-woodlands/" },
+  { label: "Bellaire", href: "/bellaire/" },
+  { label: "Memorial", href: "/memorial/" },
+  { label: "River Oaks", href: "/houston/" },
 ];
 
 export default function ServiceAreas() {
@@ -22,11 +22,7 @@ export default function ServiceAreas() {
 
   const pill = {
     hidden: { opacity: 0, scale: shouldReduce ? 1 : 0.85 },
-    show: {
-      opacity: 1,
-      scale: 1,
-      transition: { duration: 0.3, ease: "easeOut" as const },
-    },
+    show: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: "easeOut" as const } },
   };
 
   return (
@@ -55,14 +51,15 @@ export default function ServiceAreas() {
           className="flex flex-wrap justify-center gap-3 mb-6"
         >
           {areas.map((area) => (
-            <motion.div
-              key={area}
+            <motion.a
+              key={area.label}
+              href={area.href}
               variants={pill}
-              className="flex items-center gap-2 bg-white border border-slate-200 text-[#1E293B] px-5 py-2.5 rounded-full font-semibold shadow-sm text-sm"
+              className="flex items-center gap-2 bg-white border border-slate-200 text-[#1E293B] px-5 py-2.5 rounded-full font-semibold shadow-sm text-sm hover:border-[#1D4ED8] hover:text-[#1D4ED8] transition-colors"
             >
               <MapPin size={15} className="text-[#1D4ED8]" />
-              {area}
-            </motion.div>
+              {area.label}
+            </motion.a>
           ))}
         </motion.div>
 
