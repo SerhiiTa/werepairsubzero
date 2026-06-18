@@ -54,6 +54,7 @@ export default function Hero() {
           <motion.div {...anim(0.3)} className="flex flex-wrap gap-4 mb-12">
             <motion.a
               href="tel:3464138813"
+              onClick={() => window.gtag?.("event", "phone_click", { event_category: "contact", event_label: "hero" })}
               className="flex items-center gap-2.5 bg-[#1D4ED8] text-white px-6 py-3.5 rounded-lg font-bold text-lg shadow-lg"
               whileHover={shouldReduce ? {} : { scale: 1.03 }}
               whileTap={shouldReduce ? {} : { scale: 0.97 }}
@@ -62,7 +63,7 @@ export default function Hero() {
               (346) 413-8813
             </motion.a>
             <motion.button
-              onClick={openModal}
+              onClick={() => { openModal(); window.gtag?.("event", "booking_click", { event_category: "booking", event_label: "hero" }); }}
               className="flex items-center gap-2 border-2 border-white/70 text-white px-6 py-3.5 rounded-lg font-bold text-lg hover:bg-white/10 transition-colors"
               whileHover={shouldReduce ? {} : { scale: 1.03 }}
               whileTap={shouldReduce ? {} : { scale: 0.97 }}

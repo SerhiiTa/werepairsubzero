@@ -24,6 +24,7 @@ export default function CTATestimonial() {
 
             <a
               href="tel:3464138813"
+              onClick={() => window.gtag?.("event", "phone_click", { event_category: "contact", event_label: "cta" })}
               className="flex items-center gap-3 text-white mb-8 group w-fit"
             >
               <Phone size={28} className="text-[#1D4ED8]" />
@@ -33,7 +34,7 @@ export default function CTATestimonial() {
             </a>
 
             <motion.button
-              onClick={openModal}
+              onClick={() => { openModal(); window.gtag?.("event", "booking_click", { event_category: "booking", event_label: "cta" }); }}
               className="inline-flex items-center gap-2 bg-[#1D4ED8] text-white px-8 py-4 rounded-lg font-bold text-lg mb-8"
               whileHover={shouldReduce ? {} : { scale: 1.03 }}
               whileTap={shouldReduce ? {} : { scale: 0.97 }}

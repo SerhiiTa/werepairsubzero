@@ -185,6 +185,7 @@ export function BookingModalProvider({ children }: { children: ReactNode }) {
     } finally {
       setSubmitting(false);
       setSuccess(true);
+      window.gtag?.("event", "form_submit", { event_category: "booking", event_label: "booking_modal" });
     }
   };
 

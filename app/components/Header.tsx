@@ -76,6 +76,7 @@ export default function Header() {
         <div className="flex items-center gap-3">
           <motion.a
             href="tel:3464138813"
+            onClick={() => window.gtag?.("event", "phone_click", { event_category: "contact", event_label: "header" })}
             className="hidden sm:flex items-center gap-2 bg-[#1D4ED8] text-white px-4 py-2 rounded-lg text-sm font-bold shrink-0"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
@@ -144,6 +145,7 @@ export default function Header() {
 
               <a
                 href="tel:3464138813"
+                onClick={() => window.gtag?.("event", "phone_click", { event_category: "contact", event_label: "header" })}
                 className="flex items-center gap-2 bg-[#1D4ED8] text-white px-4 py-2.5 rounded-lg font-bold w-fit"
               >
                 <Phone size={15} />

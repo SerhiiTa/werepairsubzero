@@ -107,6 +107,7 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
 export default function CityPageClient({ data }: { data: CityData }) {
   const { openModal } = useBookingModal();
   const shouldReduce = useReducedMotion();
+  const cityLabel = data.city.toLowerCase().replace(/\s+/g, "_");
 
   const fadeUp = (delay = 0) => ({
     initial: { opacity: 0, y: shouldReduce ? 0 : 28 },
@@ -136,6 +137,7 @@ export default function CityPageClient({ data }: { data: CityData }) {
             <motion.div {...fadeUp(0.16)} className="flex flex-wrap gap-4">
               <motion.a
                 href="tel:3464138813"
+                onClick={() => window.gtag?.("event", "phone_click", { event_category: "contact", event_label: cityLabel })}
                 className="flex items-center gap-2.5 bg-[#1D4ED8] text-white px-6 py-3.5 rounded-lg font-bold text-lg shadow-lg"
                 whileHover={shouldReduce ? {} : { scale: 1.03 }}
                 whileTap={shouldReduce ? {} : { scale: 0.97 }}
@@ -143,7 +145,7 @@ export default function CityPageClient({ data }: { data: CityData }) {
                 <Phone size={20} /> (346) 413-8813
               </motion.a>
               <motion.button
-                onClick={openModal}
+                onClick={() => { openModal(); window.gtag?.("event", "booking_click", { event_category: "booking", event_label: cityLabel }); }}
                 className="flex items-center gap-2 border-2 border-white/70 text-white px-6 py-3.5 rounded-lg font-bold text-lg hover:bg-white/10 transition-colors"
                 whileHover={shouldReduce ? {} : { scale: 1.03 }}
                 whileTap={shouldReduce ? {} : { scale: 0.97 }}
@@ -239,7 +241,7 @@ export default function CityPageClient({ data }: { data: CityData }) {
             </motion.p>
             <motion.div {...fadeUp(0.14)} className="flex flex-wrap gap-4 justify-center">
               <motion.button
-                onClick={openModal}
+                onClick={() => { openModal(); window.gtag?.("event", "booking_click", { event_category: "booking", event_label: cityLabel }); }}
                 className="bg-[#1D4ED8] text-white px-8 py-4 rounded-lg font-bold text-base hover:bg-[#1e40af] transition-colors"
                 whileHover={shouldReduce ? {} : { scale: 1.03 }}
                 whileTap={shouldReduce ? {} : { scale: 0.97 }}
@@ -248,6 +250,7 @@ export default function CityPageClient({ data }: { data: CityData }) {
               </motion.button>
               <motion.a
                 href="tel:3464138813"
+                onClick={() => window.gtag?.("event", "phone_click", { event_category: "contact", event_label: cityLabel })}
                 className="flex items-center gap-2.5 border-2 border-white/40 text-white px-8 py-4 rounded-lg font-bold text-base hover:bg-white/10 transition-colors"
                 whileHover={shouldReduce ? {} : { scale: 1.03 }}
                 whileTap={shouldReduce ? {} : { scale: 0.97 }}
