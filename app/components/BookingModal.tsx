@@ -15,8 +15,11 @@ interface BookingContextType {
 const BookingContext = createContext<BookingContextType>({ openModal: () => {} });
 export const useBookingModal = () => useContext(BookingContext);
 
-const BOT_TOKEN = process.env.NEXT_PUBLIC_BOT_TOKEN || "";
-const CHAT_ID = process.env.NEXT_PUBLIC_CHAT_ID || "";
+// Booking submissions go through a Cloudflare Worker proxy, so the Telegram
+// bot token never ships in the browser bundle. See worker/README.md.
+const BOOKING_ENDPOINT =
+  process.env.NEXT_PUBLIC_BOOKING_ENDPOINT ||
+  "https://werepairsubzero-booking.YOUR-SUBDOMAIN.workers.dev";
 
 const TIME_SLOTS = [
   { value: "Morning 8am–12pm", label: "Morning (8am – 12pm)" },
@@ -167,20 +170,20 @@ export function BookingModalProvider({ children }: { children: ReactNode }) {
     setTouched(allTouched);
     if (!isFormValid(form)) return;
 
-    const text =
-      `🔧 New Booking — WeRepairSubZero\n\n` +
-      `👤 Name: ${form.name}\n` +
-      `📞 Phone: ${form.phone}\n` +
-      `📍 Address: ${form.address}, ZIP: ${form.zip}\n` +
-      `📅 Date: ${formatDate(form.date)}, Time: ${form.time}\n` +
-      `🔧 Issue: ${form.issue}`;
-
     setSubmitting(true);
     try {
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      await fetch(BOOKING_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: CHAT_ID, text }),
+        body: JSON.stringify({
+          name: form.name,
+          phone: form.phone,
+          address: form.address,
+          zip: form.zip,
+          issue: form.issue,
+          date: formatDate(form.date),
+          time: form.time,
+        }),
       });
     } finally {
       setSubmitting(false);

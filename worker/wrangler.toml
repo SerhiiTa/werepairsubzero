@@ -1,0 +1,8 @@
+name = "werepairsubzero-booking"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# BOT_TOKEN and CHAT_ID are NOT set here — they are stored as encrypted
+# Worker secrets so they never appear in this file or in git:
+#   wrangler secret put BOT_TOKEN
+#   wrangler secret put CHAT_ID
