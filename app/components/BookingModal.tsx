@@ -3,6 +3,7 @@ import {
   createContext,
   useContext,
   useState,
+  useRef,
   ReactNode,
   FormEvent,
   useEffect,
@@ -60,12 +61,6 @@ function getMinDate() {
 function isSunday(dateStr: string) {
   if (!dateStr) return false;
   return new Date(dateStr + "T00:00:00").getDay() === 0;
-}
-
-function formatDate(dateStr: string) {
-  if (!dateStr) return dateStr;
-  const [y, m, d] = dateStr.split("-");
-  return `${m}/${d}/${y}`;
 }
 
 function formatPhone(raw: string): string {
@@ -133,12 +128,23 @@ export function BookingModalProvider({ children }: { children: ReactNode }) {
   const [touched, setTouched] = useState<Touched>(allUntouched);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // One id per booking/form session — stable across repeated Submit presses
+  // (e.g. customer retries after a timeout) so the Worker/WRA never sees a
+  // retried submission as a new, separate booking. A new id is generated
+  // only when a new session starts: on openModal (also covers "previous
+  // booking confirmed, form reset for a new booking", since openModal is
+  // what resets the form).
+  const providerEventIdRef = useRef<string>("");
 
   const openModal = () => {
     setIsOpen(true);
     setSuccess(false);
+    setSubmitError(null);
     setForm(emptyForm);
     setTouched(allUntouched);
+    providerEventIdRef.current = `werepairsubzero-${crypto.randomUUID()}`;
   };
 
   const closeModal = () => setIsOpen(false);
@@ -170,25 +176,48 @@ export function BookingModalProvider({ children }: { children: ReactNode }) {
     setTouched(allTouched);
     if (!isFormValid(form)) return;
 
+    // Reuse the id generated for this booking session (see openModal) so a
+    // second Submit press — e.g. after a timeout — carries the SAME id.
+    // Fallback only guards against an unexpected empty ref; normal flow
+    // always has one set by openModal before the form can be submitted.
+    if (!providerEventIdRef.current) {
+      providerEventIdRef.current = `werepairsubzero-${crypto.randomUUID()}`;
+    }
+    const providerEventId = providerEventIdRef.current;
+
     setSubmitting(true);
+    setSubmitError(null);
     try {
-      await fetch(BOOKING_ENDPOINT, {
+      const res = await fetch(BOOKING_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          providerEventId,
           name: form.name,
           phone: form.phone,
           address: form.address,
           zip: form.zip,
           issue: form.issue,
-          date: formatDate(form.date),
+          date: form.date, // ISO yyyy-mm-dd; the Worker formats it for display
           time: form.time,
+          page: typeof window !== "undefined" ? window.location.href : "",
         }),
       });
-    } finally {
-      setSubmitting(false);
+
+      if (!res.ok) {
+        throw new Error(`Booking submission failed (${res.status})`);
+      }
+
       setSuccess(true);
       window.gtag?.("event", "form_submit", { event_category: "booking", event_label: "booking_modal" });
+    } catch {
+      // The Worker/WRA is the source of truth for booking success — a
+      // non-2xx response (or network failure) must NOT show a success state.
+      setSubmitError(
+        "Something went wrong sending your request. Please call us at (346) 413-8813, or try again."
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -384,9 +413,15 @@ export function BookingModalProvider({ children }: { children: ReactNode }) {
                     >
                       {submitting ? "Sending…" : "Request Appointment"}
                     </button>
-                    <p className="text-xs text-center text-slate-400 mt-3">
-                      We&apos;ll call to confirm within 30 minutes.
-                    </p>
+                    {submitError ? (
+                      <p className="text-red-500 text-xs text-center mt-3">
+                        {submitError}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-center text-slate-400 mt-3">
+                        We&apos;ll call to confirm within 30 minutes.
+                      </p>
+                    )}
                   </div>
                 </form>
               )}
