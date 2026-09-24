@@ -19,7 +19,7 @@ export const useBookingModal = () => useContext(BookingContext);
 // bot token never ships in the browser bundle. See worker/README.md.
 const BOOKING_ENDPOINT =
   process.env.NEXT_PUBLIC_BOOKING_ENDPOINT ||
-  "https://werepairsubzero-booking.YOUR-SUBDOMAIN.workers.dev";
+  "https://werepairsubzero-booking.werepairsubzero.workers.dev";
 
 const TIME_SLOTS = [
   { value: "Morning 8am–12pm", label: "Morning (8am – 12pm)" },
