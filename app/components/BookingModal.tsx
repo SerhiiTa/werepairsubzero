@@ -22,6 +22,10 @@ const BOOKING_ENDPOINT =
   process.env.NEXT_PUBLIC_BOOKING_ENDPOINT ||
   "https://werepairsubzero-booking.werepairsubzero.workers.dev";
 
+// The Worker answers as soon as the CRM confirms (Telegram goes out in the
+// background), so anything slower than this means something is stuck.
+const SUBMIT_TIMEOUT_MS = 10000;
+
 const TIME_SLOTS = [
   { value: "Morning 8am–12pm", label: "Morning (8am – 12pm)" },
   { value: "Afternoon 12pm–3pm", label: "Afternoon (12pm – 3pm)" },
@@ -137,6 +141,9 @@ export function BookingModalProvider({ children }: { children: ReactNode }) {
   // booking confirmed, form reset for a new booking", since openModal is
   // what resets the form).
   const providerEventIdRef = useRef<string>("");
+  // Synchronous guard: `submitting` state only disables the button after a
+  // re-render, so a fast double tap could otherwise fire two requests.
+  const inFlightRef = useRef(false);
 
   const openModal = () => {
     setIsOpen(true);
@@ -173,6 +180,7 @@ export function BookingModalProvider({ children }: { children: ReactNode }) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (inFlightRef.current) return;
     setTouched(allTouched);
     if (!isFormValid(form)) return;
 
@@ -185,11 +193,15 @@ export function BookingModalProvider({ children }: { children: ReactNode }) {
     }
     const providerEventId = providerEventIdRef.current;
 
+    inFlightRef.current = true;
     setSubmitting(true);
     setSubmitError(null);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), SUBMIT_TIMEOUT_MS);
     try {
       const res = await fetch(BOOKING_ENDPOINT, {
         method: "POST",
+        signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           providerEventId,
@@ -210,13 +222,19 @@ export function BookingModalProvider({ children }: { children: ReactNode }) {
 
       setSuccess(true);
       window.gtag?.("event", "form_submit", { event_category: "booking", event_label: "booking_modal" });
-    } catch {
+    } catch (err) {
       // The Worker/WRA is the source of truth for booking success — a
-      // non-2xx response (or network failure) must NOT show a success state.
+      // non-2xx response, network failure or timeout must NOT show success.
+      // Retrying is safe: it reuses providerEventId, so no duplicate booking.
+      const timedOut = err instanceof DOMException && err.name === "AbortError";
       setSubmitError(
-        "Something went wrong sending your request. Please call us at (346) 413-8813, or try again."
+        timedOut
+          ? "This is taking longer than usual. Please press Request Appointment again, or call us at (346) 413-8813."
+          : "Something went wrong sending your request. Please call us at (346) 413-8813, or try again."
       );
     } finally {
+      clearTimeout(timer);
+      inFlightRef.current = false;
       setSubmitting(false);
     }
   };

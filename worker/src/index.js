@@ -20,6 +20,11 @@ const WRA_ENDPOINT =
   "https://werepairrefrigerators.vercel.app/api/public/inbound/website";
 const WRA_PUBLIC_KEY = "wra_a5d5efbef8a9fa57264c0b3d011bf622";
 
+// Kept below the browser's 10s timeout so the site gets a real answer
+// (502) instead of aborting on its own.
+const WRA_TIMEOUT_MS = 8000;
+const TELEGRAM_TIMEOUT_MS = 10000;
+
 function corsHeaders(origin) {
   return {
     "Access-Control-Allow-Origin": ALLOWED_ORIGINS.has(origin) ? origin : "",
@@ -43,7 +48,7 @@ function formatDateForDisplay(isoDate) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const origin = request.headers.get("Origin") || "";
     const headers = corsHeaders(origin);
 
@@ -119,6 +124,7 @@ export default {
           Authorization: `WRA-Source ${WRA_PUBLIC_KEY}:${env.WRA_SOURCE_SECRET}`,
         },
         body: JSON.stringify(wraPayload),
+        signal: AbortSignal.timeout(WRA_TIMEOUT_MS),
       });
 
       let wraJson = null;
@@ -138,6 +144,8 @@ export default {
     }
 
     // ── 2. Telegram — best-effort notification, never affects the result ─
+    // Sent in the background via waitUntil so the browser gets its answer
+    // as soon as WRA responds; a slow Telegram API no longer holds the form.
     const text =
       `🔧 New Booking — WeRepairSubZero\n\n` +
       `👤 Name: ${name}\n` +
@@ -147,16 +155,22 @@ export default {
       `🔧 Issue: ${issue}` +
       (wraSuccess ? "" : `\n\n⚠️ WRA CRM submission FAILED — follow up manually.`);
 
-    try {
-      await fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/sendMessage`, {
+    ctx.waitUntil(
+      fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ chat_id: env.CHAT_ID, text }),
-      });
-    } catch {
-      // Telegram is a notification channel only — its failure must never
-      // change whether the browser sees the booking as successful.
-    }
+        signal: AbortSignal.timeout(TELEGRAM_TIMEOUT_MS),
+      })
+        .then((res) => {
+          if (!res.ok) console.error(`Telegram notification failed (${res.status}) for ${providerEventId}`);
+        })
+        .catch((err) => {
+          // Telegram is a notification channel only — its failure must never
+          // change whether the browser sees the booking as successful.
+          console.error(`Telegram notification error for ${providerEventId}: ${err?.name || "Error"}`);
+        })
+    );
 
     // ── 3. Respond to the browser based on WRA's result only ────────────
     if (!wraSuccess) {
