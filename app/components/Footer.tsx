@@ -37,7 +37,7 @@ export default function Footer() {
   const shouldReduce = useReducedMotion();
 
   return (
-    <footer className="bg-[#0F172A] border-t border-white/10 pt-16 pb-8">
+    <footer className="bg-[#0F172A] border-t border-white/10 pt-16 pb-[calc(2rem+env(safe-area-inset-bottom))]">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: shouldReduce ? 0 : 20 }}

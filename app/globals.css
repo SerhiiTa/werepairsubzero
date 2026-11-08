@@ -4,10 +4,22 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: #0F172A;
 }
 
 body {
+  background-color: #0F172A;
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+}
+
+/* Page content stays white; the dark html/body ground shows only behind iOS Safari's translucent bars and overscroll */
+main {
+  background-color: #fff;
+}
+
+.hero {
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 @media (prefers-reduced-motion: reduce) {

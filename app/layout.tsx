@@ -1,6 +1,6 @@
 declare global { interface Window { gtag?: (...args: unknown[]) => void } }
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -19,6 +19,13 @@ export const metadata: Metadata = {
     icon: "/logo.png",
     apple: "/logo.png",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0F172A",
 };
 
 const schema = {
@@ -76,7 +83,7 @@ export default function RootLayout({
           gtag('config', 'G-YSLTHX24RJ');
         `}
       </Script>
-      <body className="font-sans antialiased bg-white text-[#1E293B]">
+      <body className="font-sans antialiased text-[#1E293B]">
         <BookingModalProvider>{children}</BookingModalProvider>
       </body>
     </html>

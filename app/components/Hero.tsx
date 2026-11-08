@@ -18,7 +18,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative min-h-[90vh] flex items-center overflow-hidden"
+      className="hero relative flex items-center overflow-hidden"
     >
       <div
         className="absolute inset-0 bg-cover"

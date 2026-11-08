@@ -124,7 +124,7 @@ export default function CityPageClient({ data }: { data: CityData }) {
       <Header />
       <main>
         {/* Hero */}
-        <section className="relative min-h-[55vh] flex items-center overflow-hidden">
+        <section className="hero relative flex items-center overflow-hidden">
           <div className="absolute inset-0 bg-cover" style={{ backgroundImage: `url('${data.photo}')`, backgroundPosition: data.photoPosition ?? "center" }} />
           <div className="absolute inset-0 bg-black/55" />
           <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 py-20">
