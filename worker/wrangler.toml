@@ -2,6 +2,13 @@ name = "werepairsubzero-booking"
 main = "src/index.js"
 compatibility_date = "2025-01-01"
 
+# Idempotency keys (idem:<id>, 24h TTL) and undelivered leads (failed:<id>).
+# Create once with:  wrangler kv namespace create BOOKINGS_KV
+# then paste the printed id below.
+[[kv_namespaces]]
+binding = "BOOKINGS_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
 # BOT_TOKEN, CHAT_ID and WRA_SOURCE_SECRET are NOT set here — they are
 # stored as encrypted Worker secrets so they never appear in this file or
 # in git:

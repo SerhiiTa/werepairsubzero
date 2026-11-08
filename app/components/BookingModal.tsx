@@ -22,8 +22,8 @@ const BOOKING_ENDPOINT =
   process.env.NEXT_PUBLIC_BOOKING_ENDPOINT ||
   "https://werepairsubzero-booking.werepairsubzero.workers.dev";
 
-// The Worker answers as soon as the CRM confirms (Telegram goes out in the
-// background), so anything slower than this means something is stuck.
+// The Worker answers right after validating the fields (CRM and Telegram run
+// in the background), so anything slower than this means something is stuck.
 const SUBMIT_TIMEOUT_MS = 10000;
 
 const TIME_SLOTS = [
@@ -223,8 +223,8 @@ export function BookingModalProvider({ children }: { children: ReactNode }) {
       setSuccess(true);
       window.gtag?.("event", "form_submit", { event_category: "booking", event_label: "booking_modal" });
     } catch (err) {
-      // The Worker/WRA is the source of truth for booking success — a
-      // non-2xx response, network failure or timeout must NOT show success.
+      // A non-2xx response (invalid fields, Worker down), network failure or
+      // timeout must NOT show success.
       // Retrying is safe: it reuses providerEventId, so no duplicate booking.
       const timedOut = err instanceof DOMException && err.name === "AbortError";
       setSubmitError(

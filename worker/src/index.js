@@ -1,15 +1,18 @@
 // Cloudflare Worker: booking intake for WeRepairSubZero.
 //
 // The site (static export on GitHub Pages) POSTs the form fields here as JSON.
-// This Worker is the single server-side hop between the browser and:
-//   1. WRA CRM  — the booking-persistence authority. The browser-facing
-//      success/failure of a submission is decided ONLY by this call.
-//   2. Telegram — a best-effort notification channel. Its outcome never
-//      changes whether the booking is reported as successful.
+// The Worker validates them and answers the browser immediately with
+// {ok:true}; everything else runs in the background via ctx.waitUntil:
+//   1. WRA CRM  — the booking-persistence system. One retry after 2s.
+//   2. Telegram — always notified, with the CRM outcome in the message.
+//   3. KV       — last-resort storage when BOTH CRM and Telegram failed.
+//
+// Idempotency: providerEventId (one UUID per form session, reused on retry)
+// is recorded in KV for 24h; a repeated id is acknowledged but not processed.
 //
 // Secrets (BOT_TOKEN, CHAT_ID, WRA_SOURCE_SECRET) live only in Cloudflare's
 // encrypted secret store (env.*) — never in git, never in the browser bundle,
-// never logged.
+// never logged. KV binding: env.BOOKINGS_KV (see wrangler.toml).
 
 const ALLOWED_ORIGINS = new Set([
   "https://werepairsubzero.com",
@@ -20,10 +23,15 @@ const WRA_ENDPOINT =
   "https://werepairrefrigerators.vercel.app/api/public/inbound/website";
 const WRA_PUBLIC_KEY = "wra_a5d5efbef8a9fa57264c0b3d011bf622";
 
-// Kept below the browser's 10s timeout so the site gets a real answer
-// (502) instead of aborting on its own.
+// Worst case in the background: 8s + 2s + 8s (CRM) + 8s (Telegram) stays
+// under the ~30s Cloudflare allows waitUntil work after the response.
 const WRA_TIMEOUT_MS = 8000;
-const TELEGRAM_TIMEOUT_MS = 10000;
+const WRA_RETRY_DELAY_MS = 2000;
+const TELEGRAM_TIMEOUT_MS = 8000;
+
+const IDEMPOTENCY_TTL_SECONDS = 24 * 60 * 60;
+const idempotencyKey = (id) => `idem:${id}`;
+const failedLeadKey = (id) => `failed:${id}`;
 
 function corsHeaders(origin) {
   return {
@@ -45,6 +53,89 @@ function formatDateForDisplay(isoDate) {
   const [y, m, d] = isoDate.split("-");
   if (!y || !m || !d) return isoDate;
   return `${m}/${d}/${y}`;
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function json(body, headers, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...headers, "Content-Type": "application/json" },
+  });
+}
+
+async function sendToWra(payload, env) {
+  try {
+    const res = await fetch(WRA_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `WRA-Source ${WRA_PUBLIC_KEY}:${env.WRA_SOURCE_SECRET}`,
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(WRA_TIMEOUT_MS),
+    });
+    const data = await res.json().catch(() => null);
+    return (
+      res.ok === true &&
+      data?.ok === true &&
+      data?.accepted === true &&
+      data?.persisted === true
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function sendToTelegram(text, env) {
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: env.CHAT_ID, text }),
+      signal: AbortSignal.timeout(TELEGRAM_TIMEOUT_MS),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// Runs after the browser already has its {ok:true}.
+async function processBooking(lead, env) {
+  const { providerEventId } = lead;
+
+  let crmSaved = await sendToWra(lead.wraPayload, env);
+  if (!crmSaved) {
+    await sleep(WRA_RETRY_DELAY_MS);
+    crmSaved = await sendToWra(lead.wraPayload, env);
+  }
+  if (!crmSaved) console.error(`WRA CRM failed twice for ${providerEventId}`);
+
+  const text =
+    `🔧 New Booking — WeRepairSubZero\n\n` +
+    `👤 Name: ${lead.name}\n` +
+    `📞 Phone: ${lead.phone}\n` +
+    `📍 Address: ${lead.address}, ZIP: ${lead.zip}\n` +
+    `📅 Date: ${formatDateForDisplay(lead.date)}, Time: ${lead.time}\n` +
+    `🔧 Issue: ${lead.issue}\n\n` +
+    (crmSaved ? "CRM: saved" : "⚠️ CRM FAILED — save this lead manually");
+
+  const telegramSent = await sendToTelegram(text, env);
+  if (!telegramSent) console.error(`Telegram notification failed for ${providerEventId}`);
+
+  if (!crmSaved && !telegramSent) {
+    // Nobody has this lead yet — keep it in KV (no TTL) for manual recovery.
+    try {
+      await env.BOOKINGS_KV.put(
+        failedLeadKey(providerEventId),
+        JSON.stringify({ ...lead, failedAt: new Date().toISOString() })
+      );
+      console.error(`LEAD NOT DELIVERED — stored in KV as ${failedLeadKey(providerEventId)}`);
+    } catch (err) {
+      console.error(`LEAD LOST — CRM, Telegram and KV all failed for ${providerEventId}: ${err?.name || "Error"}`);
+    }
+  }
 }
 
 export default {
@@ -90,7 +181,21 @@ export default {
       return new Response("Missing required fields", { status: 400, headers });
     }
 
-    // ── 1. WRA CRM — booking-persistence authority ──────────────────────
+    // ── Idempotency: a repeated id is acknowledged, not processed again ──
+    // KV is eventually consistent (a write can take up to ~60s to reach other
+    // Cloudflare locations), so this guards retries, not simultaneous taps —
+    // the form blocks those itself. A KV error must never block a lead.
+    try {
+      if (await env.BOOKINGS_KV.get(idempotencyKey(providerEventId))) {
+        return json({ ok: true, duplicate: true }, headers);
+      }
+      await env.BOOKINGS_KV.put(idempotencyKey(providerEventId), "1", {
+        expirationTtl: IDEMPOTENCY_TTL_SECONDS,
+      });
+    } catch (err) {
+      console.error(`Idempotency check failed for ${providerEventId}: ${err?.name || "Error"}`);
+    }
+
     const wraPayload = {
       providerEventId,
       customer: { name, phone },
@@ -115,74 +220,13 @@ export default {
       },
     };
 
-    let wraSuccess = false;
-    try {
-      const wraResponse = await fetch(WRA_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `WRA-Source ${WRA_PUBLIC_KEY}:${env.WRA_SOURCE_SECRET}`,
-        },
-        body: JSON.stringify(wraPayload),
-        signal: AbortSignal.timeout(WRA_TIMEOUT_MS),
-      });
-
-      let wraJson = null;
-      try {
-        wraJson = await wraResponse.json();
-      } catch {
-        wraJson = null;
-      }
-
-      wraSuccess =
-        wraResponse.ok === true &&
-        wraJson?.ok === true &&
-        wraJson?.accepted === true &&
-        wraJson?.persisted === true;
-    } catch {
-      wraSuccess = false;
-    }
-
-    // ── 2. Telegram — best-effort notification, never affects the result ─
-    // Sent in the background via waitUntil so the browser gets its answer
-    // as soon as WRA responds; a slow Telegram API no longer holds the form.
-    const text =
-      `🔧 New Booking — WeRepairSubZero\n\n` +
-      `👤 Name: ${name}\n` +
-      `📞 Phone: ${phone}\n` +
-      `📍 Address: ${address}, ZIP: ${zip}\n` +
-      `📅 Date: ${formatDateForDisplay(date)}, Time: ${time}\n` +
-      `🔧 Issue: ${issue}` +
-      (wraSuccess ? "" : `\n\n⚠️ WRA CRM submission FAILED — follow up manually.`);
-
     ctx.waitUntil(
-      fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: env.CHAT_ID, text }),
-        signal: AbortSignal.timeout(TELEGRAM_TIMEOUT_MS),
-      })
-        .then((res) => {
-          if (!res.ok) console.error(`Telegram notification failed (${res.status}) for ${providerEventId}`);
-        })
-        .catch((err) => {
-          // Telegram is a notification channel only — its failure must never
-          // change whether the browser sees the booking as successful.
-          console.error(`Telegram notification error for ${providerEventId}: ${err?.name || "Error"}`);
-        })
+      processBooking(
+        { providerEventId, name, phone, address, zip, issue, date, time, page, wraPayload },
+        env
+      )
     );
 
-    // ── 3. Respond to the browser based on WRA's result only ────────────
-    if (!wraSuccess) {
-      return new Response(JSON.stringify({ ok: false }), {
-        status: 502,
-        headers: { ...headers, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { ...headers, "Content-Type": "application/json" },
-    });
+    return json({ ok: true }, headers);
   },
 };
