@@ -5,6 +5,7 @@
 html {
   scroll-behavior: smooth;
   background-color: #0F172A;
+  min-height: 100dvh;
 }
 
 body {
@@ -12,14 +13,11 @@ body {
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
 }
 
-/* Page content stays white; the dark html/body ground shows only behind iOS Safari's translucent bars and overscroll */
-main {
-  background-color: #fff;
-}
-
+/* lvh is the height with Safari's toolbars collapsed, so the hero also fills
+   the strip under the floating bottom bar instead of exposing the next section */
 .hero {
   min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100lvh;
 }
 
 @media (prefers-reduced-motion: reduce) {

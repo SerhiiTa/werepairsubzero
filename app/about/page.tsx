@@ -171,7 +171,7 @@ export default function AboutPage() {
         </section>
 
         {/* Content sections */}
-        <section className="py-4">
+        <section className="py-4 bg-white">
           {sections.map((s, i) => {
             const Icon = s.icon;
             const odd = i % 2 === 1;
